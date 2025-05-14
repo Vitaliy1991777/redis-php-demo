@@ -8,17 +8,14 @@ $redis->auth('mypassword');
 
 $queueKey = 'delayed_queue';
 
-// Задача с задержкой 10 секунд
 $delay = 10;
 
-// Случайный тип задачи и действие
 $types = ['daily', 'weekly', 'monthly', 'yearly'];
 $taskNames = ['generate_report', 'send_email', 'clean_temp'];
 
 $type = $types[array_rand($types)];
 $taskName = $taskNames[array_rand($taskNames)];
 
-// Формируем задачу
 $task = json_encode([
     'task' => $taskName,
     'params' => ['type' => $type],
@@ -26,13 +23,11 @@ $task = json_encode([
     'id' => uniqid()
 ]);
 
-// Время запуска задачи
 $runAt = time() + $delay;
 $redis->zAdd($queueKey, $runAt, $task);
 
 echo "Task added, will be available at " . date('H:i:s', $runAt) . PHP_EOL;
 
-// Обработка всех задач, которые уже "созрели"
 $now = time();
 $tasks = $redis->zRangeByScore($queueKey, 0, $now);
 
@@ -50,7 +45,6 @@ foreach ($tasks as $taskJson) {
     echo "Время: " . date('H:i:s', $data['created_at']) . "\n";
     echo "-----\n";
 
-    // Удаляем выполненную задачу
     $redis->zRem($queueKey, $taskJson);
 }
 ?>
